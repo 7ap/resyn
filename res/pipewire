@@ -1,0 +1,14 @@
+#!/bin/bash
+
+VIRTUAL_SINK=virtual-sink
+VIRTUAL_MIC=virtual-mic
+
+# Create VIRTUAL_SINK and VIRTUAL_MIC.
+echo "Loading ${VIRTUAL_SINK} and ${VIRTUAL_MIC}..."
+pactl load-module module-null-sink media.class=Audio/Sink sink_name=$VIRTUAL_SINK channel_map=stereo >> /dev/null
+pactl load-module module-null-sink media.class=Audio/Source/Virtual sink_name=$VIRTUAL_MIC channel_map=front-left,front-right >> /dev/null
+
+# Link VIRTUAL_SINK to VIRTUAL_MIC.
+echo "Linking ${VIRTUAL_SINK} to ${VIRTUAL_MIC}..."
+pw-link $VIRTUAL_SINK:monitor_FL $VIRTUAL_MIC:input_FL
+pw-link $VIRTUAL_SINK:monitor_FR $VIRTUAL_MIC:input_FR
