@@ -127,15 +127,48 @@ pub fn run(tx: Sender<String>) {
         }
 
         if data.len() < MIN_SAMPLES {
-            warn!(
-                "speech interpolation is not implemented yet, speak longer than {:?}",
-                Duration::from_secs(1) + THREAD_SLEEP_DURATION
-            );
+            if let Some(threshold) = CLI.interpolate {
+                #[rustfmt::skip]
+                let min_samples = ((threshold as f32 * WHISPER_SAMPLE_RATE as f32) / 1000.0) as usize;
 
-            last = None;
-            data.clear();
+                if data.len() < min_samples {
+                    debug!(
+                        "speech with length of {}ms does not meet threshold of {}ms, skipping...",
+                        ((data.len() as f32 / WHISPER_SAMPLE_RATE as f32) * 1000.0) as usize,
+                        threshold
+                    );
 
-            continue;
+                    last = None;
+                    data.clear();
+
+                    continue;
+                }
+
+                let factor = MIN_SAMPLES as f32 / data.len() as f32;
+                let mut interpolated_data = Vec::with_capacity(MIN_SAMPLES);
+
+                for i in 0..MIN_SAMPLES {
+                    interpolated_data.push(data[(i as f32 / factor) as usize]);
+                }
+
+                debug!(
+                    "interpolated {} samples by a factor of {}, continuing...",
+                    data.len(),
+                    factor,
+                );
+
+                data = interpolated_data;
+            } else {
+                debug!(
+                    "needed {} more milliseconds of speech to run recognition, skipping...",
+                    1000 - ((data.len() as f32 / WHISPER_SAMPLE_RATE as f32) * 1000.0) as usize
+                );
+
+                last = None;
+                data.clear();
+
+                continue;
+            }
         }
 
         let mut params = FullParams::new(SamplingStrategy::default());
