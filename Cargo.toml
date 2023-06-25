@@ -16,4 +16,5 @@ regex = "1.8"
 reqwest = { version = "0.11", features = ["blocking"] }
 rodio = "0.17"
 rtrb = "0.2"
+webrtc-vad = { git = "https://github.com/andreytkachenko/webrtc-vad/", rev = "fbe0810" }
 whisper-rs = { git = "https://github.com/tazz4843/whisper-rs.git", rev = "ba0cde2" }
