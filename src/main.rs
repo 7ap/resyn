@@ -1,12 +1,18 @@
 #[macro_use]
 extern crate log;
 
-use anyhow::Result;
+mod recognition;
+mod synthesis;
 
-fn main() -> Result<()> {
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
     pretty_env_logger::init();
 
-    info!("Hello, world!");
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || recognition::run(tx));
+    thread::spawn(move || synthesis::run(rx));
 
-    Ok(())
+    loop {}
 }
