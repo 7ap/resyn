@@ -129,12 +129,12 @@ pub fn run(tx: Sender<String>) {
         if data.len() < MIN_SAMPLES {
             if let Some(threshold) = CLI.interpolate {
                 #[rustfmt::skip]
-                let min_samples = ((threshold as f32 * WHISPER_SAMPLE_RATE as f32) / 1000.0) as usize;
+                let min_samples = ((threshold as f32 * MIN_SAMPLES as f32) / 1000.0) as usize;
 
                 if data.len() < min_samples {
                     debug!(
                         "speech with length of {}ms does not meet threshold of {}ms, skipping...",
-                        ((data.len() as f32 / WHISPER_SAMPLE_RATE as f32) * 1000.0) as usize,
+                        ((data.len() as f32 / MIN_SAMPLES as f32) * 1000.0) as usize,
                         threshold
                     );
 
@@ -161,7 +161,7 @@ pub fn run(tx: Sender<String>) {
             } else {
                 debug!(
                     "needed {} more milliseconds of speech to run recognition, skipping...",
-                    1000 - ((data.len() as f32 / WHISPER_SAMPLE_RATE as f32) * 1000.0) as usize
+                    1000 - ((data.len() as f32 / MIN_SAMPLES as f32) * 1000.0) as usize
                 );
 
                 last = None;
