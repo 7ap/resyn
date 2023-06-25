@@ -1,4 +1,3 @@
-use std::env;
 use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -9,6 +8,8 @@ use dasp::sample::{Sample, ToSample};
 use regex::Regex;
 use rtrb::{Producer, RingBuffer};
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
+
+use crate::CLI;
 
 const WHISPER_SAMPLE_RATE: usize = 16000;
 const THREAD_SLEEP_DURATION: Duration = Duration::from_secs(1);
@@ -32,13 +33,7 @@ pub fn run(tx: Sender<String>) {
         buffer_size: BufferSize::Fixed(1024),
     };
 
-    let context = WhisperContext::new(
-        env::var("WHISPER_MODEL_PATH")
-            .expect("env variable `WHISPER_MODEL_PATH` is not set")
-            .as_str(),
-    )
-    .unwrap();
-
+    let context = WhisperContext::new(&CLI.model_path.to_string_lossy()).unwrap();
     let mut state = context.create_state().unwrap();
 
     let (mut producer, mut consumer) = RingBuffer::new(10 * WHISPER_SAMPLE_RATE);

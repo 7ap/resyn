@@ -1,4 +1,3 @@
-use std::env;
 use std::io::Cursor;
 use std::sync::mpsc::Receiver;
 use std::sync::Arc;
@@ -8,15 +7,14 @@ use std::time::Instant;
 use reqwest::blocking::Client;
 use rodio::{Decoder, OutputStream, Sink};
 
+use crate::CLI;
+
 pub fn run(rx: Receiver<String>) {
     let client = Arc::new(Client::new());
 
-    #[rustfmt::skip]
-    let speaker_id = env::var("COQUI_SPEAKER_ID").expect("env variable `COQUI_SPEAKER_ID` is not set");
-
     while let Some(speech) = rx.recv().ok() {
         let client = client.clone();
-        let speaker_id = speaker_id.clone();
+        let speaker_id = CLI.speaker_id.clone();
 
         thread::spawn(move || {
             let now = Instant::now();
