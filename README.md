@@ -7,7 +7,7 @@
 1. Clone the repository and enter it.
 
 ```sh
-$ git clone git@github.com:7ap/resyn.git && cd resyn
+$ git clone https://github.com/7ap/resyn.git && cd resyn
 ```
 
 2. Download a [whisper.cpp model](https://huggingface.co/ggerganov/whisper.cpp) to the `res` directory. [tiny.en](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin) seems to work the best.
@@ -19,7 +19,7 @@ $ wget -P res/ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-ti
 3. Install `tts-server` from the [🐸TTS](https://github.com/coqui-ai/tts) Python package.
 
 ```sh
-$ pip3 install TTS
+$ pip3 install TTS # Requires Python <=3.10
 ```
 
 ## ⚙️ Usage
