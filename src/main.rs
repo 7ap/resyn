@@ -26,6 +26,10 @@ pub struct Cli {
 
     /// Speaker ID to use for speech synthesis
     speaker_id: String,
+
+    /// Delay in milliseconds to wait for silence before recognizing speech
+    #[arg(short, long, default_value = "100")]
+    delay: u32,
 }
 
 fn main() {

@@ -7,14 +7,36 @@ use cpal::{BufferSize, SampleFormat, SampleRate, StreamConfig};
 use dasp::sample::{Sample, ToSample};
 use regex::Regex;
 use rtrb::{Producer, RingBuffer};
+use webrtc_vad::{SampleRate as VadSampleRate, Vad, VadMode};
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
 
 use crate::CLI;
 
 const WHISPER_SAMPLE_RATE: usize = 16000;
-const THREAD_SLEEP_DURATION: Duration = Duration::from_secs(1);
+const THREAD_SLEEP_DURATION: Duration = Duration::from_millis(25);
 
-fn data_callback<T: Sample + ToSample<f32>>(data: &[T], producer: &mut Producer<f32>) {
+#[rustfmt::skip]
+const MIN_SAMPLES: usize = (WHISPER_SAMPLE_RATE / THREAD_SLEEP_DURATION.as_millis() as usize) + WHISPER_SAMPLE_RATE;
+
+fn data_callback<T: Sample + ToSample<i16> + ToSample<f32>>(
+    data: &[T],
+    vad: &mut Vad,
+    producer: &mut Producer<f32>,
+) {
+    let data = data.iter().map(|data| data.to_sample()).collect::<Vec<_>>();
+
+    let mut is_voice_segment = false;
+
+    for chunk in data.chunks_exact(160) {
+        if vad.is_voice_segment(chunk).unwrap() {
+            is_voice_segment = true;
+        }
+    }
+
+    if !is_voice_segment {
+        return;
+    }
+
     let data = data.iter().map(|data| data.to_sample()).collect::<Vec<_>>();
 
     if let Ok(chunk) = producer.write_chunk_uninit(data.len()) {
@@ -36,30 +58,32 @@ pub fn run(tx: Sender<String>) {
     let context = WhisperContext::new(&CLI.model_path.to_string_lossy()).unwrap();
     let mut state = context.create_state().unwrap();
 
+    let mut vad = Vad::new_with_rate_and_mode(VadSampleRate::Rate16kHz, VadMode::VeryAggressive);
+
     let (mut producer, mut consumer) = RingBuffer::new(10 * WHISPER_SAMPLE_RATE);
 
     let stream = match input_device.default_input_config().unwrap().sample_format() {
         SampleFormat::I8 => input_device.build_input_stream(
             &config,
-            move |data: &[f32], _| data_callback(data, &mut producer),
+            move |data: &[f32], _| data_callback(data, &mut vad, &mut producer),
             |err| error!("stream error: {}", err),
             None,
         ),
         SampleFormat::I16 => input_device.build_input_stream(
             &config,
-            move |data: &[f32], _| data_callback(data, &mut producer),
+            move |data: &[f32], _| data_callback(data, &mut vad, &mut producer),
             |err| error!("stream error: {}", err),
             None,
         ),
         SampleFormat::I32 => input_device.build_input_stream(
             &config,
-            move |data: &[f32], _| data_callback(data, &mut producer),
+            move |data: &[f32], _| data_callback(data, &mut vad, &mut producer),
             |err| error!("stream error: {}", err),
             None,
         ),
         SampleFormat::F32 => input_device.build_input_stream(
             &config,
-            move |data: &[f32], _| data_callback(data, &mut producer),
+            move |data: &[f32], _| data_callback(data, &mut vad, &mut producer),
             |err| error!("stream error: {}", err),
             None,
         ),
@@ -69,16 +93,49 @@ pub fn run(tx: Sender<String>) {
 
     stream.play().unwrap();
 
+    let mut last = None;
+    let mut data = Vec::new();
+
     loop {
         thread::sleep(THREAD_SLEEP_DURATION);
 
-        let mut data = Vec::new();
+        if !consumer.is_empty() {
+            if let Ok(chunk) = consumer.read_chunk(consumer.slots()) {
+                if last.is_none() {
+                    debug!("speech detected, waiting {}ms for silence...", CLI.delay);
+                }
 
-        if let Ok(chunk) = consumer.read_chunk(consumer.slots()) {
-            let (first, second) = chunk.as_slices();
-            data.extend(first);
-            data.extend(second);
-            chunk.commit_all();
+                last = Some(Instant::now());
+
+                let (first, second) = chunk.as_slices();
+                data.extend(first);
+                data.extend(second);
+                chunk.commit_all();
+            }
+        }
+
+        if let Some(last) = last {
+            trace!("last spoke {:?} ago ({})", last.elapsed(), data.len());
+
+            if last.elapsed() < Duration::from_millis(CLI.delay as _) {
+                continue;
+            }
+        }
+
+        if data.is_empty() {
+            continue;
+        }
+
+        if data.len() < MIN_SAMPLES {
+            warn!(
+                "speech interpolation is not implemented yet, speak longer than {:?}",
+                Duration::from_secs(1) + THREAD_SLEEP_DURATION
+            );
+
+            last = None;
+            data.clear();
+
+            continue;
         }
 
         let mut params = FullParams::new(SamplingStrategy::default());
@@ -101,8 +158,11 @@ pub fn run(tx: Sender<String>) {
             continue; // TODO: Should we really continue in this case?
         }
 
+        last = None;
+        data.clear();
+
         if state.full_n_segments().unwrap() == 0 {
-            warn!("no segments found in {:?}", now.elapsed());
+            debug!("no segments found in {:?}", now.elapsed());
             continue;
         }
 
