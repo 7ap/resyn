@@ -1,0 +1,21 @@
+<!DOCTYPE patchbay>
+<patchbay name="resyn" version="0.4.1">
+ <items>
+  <item node-type="pipewire" port-type="pipewire-audio">
+   <output node="virtual-sink Audio/Sink sink" port="virtual-sink Audio/Sink sink:monitor_FR"/>
+   <input node="virtual-mic Audio/Source/Virtual sink" port="virtual-mic Audio/Source/Virtual sink:input_FR"/>
+  </item>
+  <item node-type="pipewire" port-type="pipewire-audio">
+   <output node="PipeWire ALSA [resyn]/ALSA Playback [resyn] [ALSA Playback]" port="ALSA Playback [resyn]:output_FL"/>
+   <input node="virtual-sink Audio/Sink sink" port="virtual-sink Audio/Sink sink:playback_FL"/>
+  </item>
+  <item node-type="pipewire" port-type="pipewire-audio">
+   <output node="PipeWire ALSA [resyn]/ALSA Playback [resyn] [ALSA Playback]" port="ALSA Playback [resyn]:output_FR"/>
+   <input node="virtual-sink Audio/Sink sink" port="virtual-sink Audio/Sink sink:playback_FR"/>
+  </item>
+  <item node-type="pipewire" port-type="pipewire-audio">
+   <output node="virtual-sink Audio/Sink sink" port="virtual-sink Audio/Sink sink:monitor_FL"/>
+   <input node="virtual-mic Audio/Source/Virtual sink" port="virtual-mic Audio/Source/Virtual sink:input_FL"/>
+  </item>
+ </items>
+</patchbay>
