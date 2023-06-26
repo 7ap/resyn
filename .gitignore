@@ -2,3 +2,9 @@
 /Cargo.lock
 
 /res/ggml-*.bin
+
+# Vosk API (https://github.com/alphacep/vosk-api/releases/latest)
+/res/vosk
+
+# Vosk models (https://alphacephei.com/vosk/models)
+/res/vosk-model-*
