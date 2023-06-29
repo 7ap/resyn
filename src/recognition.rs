@@ -24,7 +24,7 @@ fn data_callback<T: Sample + ToSample<i16>>(
             if let Some(result) = result.single() {
                 debug!("result: {:#?}", result);
 
-                if result.text.is_empty() {
+                if result.text.is_empty() || result.text == "huh" {
                     return;
                 }
 
