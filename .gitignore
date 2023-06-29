@@ -1,8 +1,6 @@
 /target
 /Cargo.lock
 
-/res/ggml-*.bin
-
 # Vosk API (https://github.com/alphacep/vosk-api/releases/latest)
 /res/vosk
 
