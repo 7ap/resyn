@@ -3,6 +3,7 @@ name = "resyn"
 version = "0.0.0"
 edition = "2021"
 publish = false
+build = "build.rs"
 
 [dependencies]
 anyhow = "1.0"
@@ -16,5 +17,9 @@ regex = "1.8"
 reqwest = { version = "0.11", features = ["blocking"] }
 rodio = "0.17"
 rtrb = "0.2"
+vosk = "0.2"
 webrtc-vad = { git = "https://github.com/andreytkachenko/webrtc-vad/", rev = "fbe0810" }
 whisper-rs = { git = "https://github.com/tazz4843/whisper-rs.git", rev = "ba0cde2" }
+
+[build-dependencies]
+copy_to_output = "2.1.0"
