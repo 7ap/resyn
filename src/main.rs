@@ -26,17 +26,6 @@ pub struct Cli {
 
     /// Speaker ID to use for speech synthesis
     speaker_id: String,
-
-    /// Delay in milliseconds to wait for silence before recognizing speech
-    #[arg(short, long, default_value = "100")]
-    delay: u32,
-
-    /// Minimum length of time in milliseconds to oversample input audio,
-    /// recommended if you speak fast in intervals under 1 second, can produce
-    /// inaccurate results if set too low as it is slowing down your speech to
-    /// match the model's sample rate, 500-750 is a good starting point
-    #[arg(short, long, value_parser = clap::value_parser!(u32).range(0..1000))]
-    interpolate: Option<u32>,
 }
 
 fn main() {
