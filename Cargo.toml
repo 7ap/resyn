@@ -13,13 +13,9 @@ cpal = "0.15"
 dasp = "0.11"
 log = "0.4"
 pretty_env_logger = "0.5"
-regex = "1.8"
 reqwest = { version = "0.11", features = ["blocking"] }
 rodio = "0.17"
-rtrb = "0.2"
 vosk = "0.2"
-webrtc-vad = { git = "https://github.com/andreytkachenko/webrtc-vad/", rev = "fbe0810" }
-whisper-rs = { git = "https://github.com/tazz4843/whisper-rs.git", rev = "ba0cde2" }
 
 [build-dependencies]
 copy_to_output = "2.1.0"
